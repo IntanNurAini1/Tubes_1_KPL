@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Tubes_1_KPL.Controller;
 
@@ -8,13 +8,15 @@ namespace Tubes_1_KPL.Model
 {
     public class LoginRegisterAutomata
     {
-        private enum State
+        public enum State
         {
             LoggedOut,
             LoggedIn
         }
 
         private State _currentState;
+        public State CurrentState => _currentState;
+
         private readonly LoginRegisterController _controller;
         private string? _currentUser;
 
@@ -24,22 +26,34 @@ namespace Tubes_1_KPL.Model
             _controller = new LoginRegisterController();
         }
 
+        public LoginRegisterAutomata(LoginRegisterController controller)
+        {
+            _currentState = State.LoggedOut;
+            _controller = controller;
+        }
+
         public async Task Register()
         {
-            Contract.Requires(_currentState == State.LoggedOut, "Register hanya boleh saat LoggedOut");
-            Debug.WriteLine($"[DEBUG] Current State: {_currentState}, Action: Register");
+            Contract.Requires(_currentState == State.LoggedOut);
             await _controller.RegisterAsync();
         }
 
-        public async Task Login()
+        public async Task Register(string username, string password)
         {
-            Contract.Requires(_currentState == State.LoggedOut, "Login hanya boleh saat LoggedOut");
-            Debug.WriteLine($"[DEBUG] Current State: {_currentState}, Action: Login");
+            Contract.Requires(_currentState == State.LoggedOut);
 
-            Console.Write("Username: ");
-            var username = Console.ReadLine()?.Trim();
-            Console.Write("Password: ");
-            var password = Console.ReadLine()?.Trim();
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                Console.WriteLine("Username/password tidak boleh kosong.");
+                return;
+            }
+
+            await _controller.RegisterAsync(username, password);
+        }
+
+        public async Task Login(string username, string password)
+        {
+            Contract.Requires(_currentState == State.LoggedOut);
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
@@ -57,8 +71,7 @@ namespace Tubes_1_KPL.Model
 
         public async Task Logout()
         {
-            Contract.Requires(_currentState == State.LoggedIn, "Logout hanya boleh saat LoggedIn");
-            Debug.WriteLine($"[DEBUG] Current State: {_currentState}, Action: Logout");
+            Contract.Requires(_currentState == State.LoggedIn);
 
             if (_currentUser == null)
             {
