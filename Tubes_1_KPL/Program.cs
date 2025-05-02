@@ -24,7 +24,7 @@ internal class Program
                     await automata.Register();
                     break;
                 case "2":
-                    // Prompt user for username and password
+
                     Console.Write("Masukkan username: ");
                     var username = Console.ReadLine();
                     Console.Write("Masukkan password: ");
