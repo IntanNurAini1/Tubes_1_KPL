@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Tubes_1_KPL.Controller;
 using Tubes_1_KPL.Model;
 using ModelTask = API.Model.Task;
-using ModelDeadline = API.Model.Deadline;
 using static Tubes_1_KPL.Controller.TaskCreator;
 
 internal class Program
@@ -46,6 +45,10 @@ internal class Program
 
                         while (_loggedInUser != null)
                         {
+                            string configPath = "JSON/reminder_config.json";
+                            ReminderConfig reminderConfig = ReminderConfig.LoadFromJson(configPath);
+                            _taskCreator.ShowReminders(reminderConfig);
+
                             Console.WriteLine("\nPilih opsi:");
                             Console.WriteLine("1. Buat Tugas");
                             Console.WriteLine("2. Lihat Tugas Saya");
@@ -141,12 +144,14 @@ internal class Program
                                     }
                                     else { Console.WriteLine("Format hari tidak valid."); }
                                     break;
-                                case "4": 
+
+                                case "4":
                                     Console.Write("Masukkan nama tugas yang ingin dihapus: ");
                                     string taskNameToDelete = Console.ReadLine();
                                     var taskAutomata = new TaskAutomata(_loggedInUser, _taskCreator);
                                     taskAutomata.ExecuteDeleteTask(taskNameToDelete);
                                     break;
+
                                 case "5":
                                     Console.WriteLine("\n=== Tandai Tugas Selesai ===");
                                     Console.Write("Masukkan nama tugas yang ingin ditandai selesai: ");
@@ -155,9 +160,10 @@ internal class Program
                                     Console.Write("Apakah tugas ini sudah selesai? (yes/no): ");
                                     string answer = Console.ReadLine() ?? "";
 
-                                    var taskCreator = new Tubes_1_KPL.Controller.TaskCreator(_loggedInUser);
+                                    var taskCreator = new TaskCreator(_loggedInUser);
                                     taskCreator.MarkTaskAsCompleted(taskNameToComplete, answer);
                                     break;
+
                                 case "6":
                                     await automata.Logout();
                                     _loggedInUser = null;
