@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Diagnostics.Contracts;
-using API.Model; // pakai model dari API
+using API.Model;
 using ModelTask = API.Model.Task;
 using ModelDeadline = API.Model.Deadline;
 
@@ -10,7 +11,7 @@ namespace Tubes_1_KPL.Controller
     public class TaskCreator
     {
         private readonly Dictionary<string, int> _monthTable;
-        private static Dictionary<string, List<ModelTask>> _userTasks = new(); // dibuat static
+        private static Dictionary<string, List<ModelTask>> _userTasks = new();
         private readonly string _loggedInUser;
 
         public TaskCreator(string loggedInUser)
@@ -62,6 +63,49 @@ namespace Tubes_1_KPL.Controller
         {
             return _userTasks.TryGetValue(_loggedInUser, out var tasks) ? new List<ModelTask>(tasks) : new List<ModelTask>();
         }
+
+        public void EditTask(string oldTaskName, string newName, string newDescription, int newDay, string newMonthString, int newYear, int newHour, int newMinute)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(oldTaskName), "Nama tugas lama harus diisi.");
+            Contract.Requires(!string.IsNullOrEmpty(newName), "Nama tugas baru harus diisi.");
+            Contract.Requires(!string.IsNullOrEmpty(newDescription), "Deskripsi tugas baru harus diisi.");
+            Contract.Requires(newDay > 0 && newDay <= 31, "Tanggal tidak valid.");
+            Contract.Requires(!string.IsNullOrEmpty(newMonthString), "Bulan harus diisi.");
+            Contract.Requires(newYear > 0, "Tahun harus valid.");
+            Contract.Requires(newHour >= 0 && newHour <= 23, "Jam harus di antara 0 dan 23.");
+            Contract.Requires(newMinute >= 0 && newMinute <= 59, "Menit harus di antara 0 dan 59.");
+            Contract.Requires(_monthTable.ContainsKey(newMonthString), "Bulan tidak valid.");
+
+            if (_userTasks.TryGetValue(_loggedInUser, out var tasks))
+            {
+                var taskToEdit = tasks.FirstOrDefault(t => t.Name.Equals(oldTaskName, StringComparison.OrdinalIgnoreCase));
+                if (taskToEdit != null)
+                {
+                    int newMonth = _monthTable[newMonthString];
+                    if (IsValidDate(newDay, newMonth, newYear))
+                    {
+                        taskToEdit.Name = newName;
+                        taskToEdit.Description = newDescription;
+                        taskToEdit.Deadline = new ModelDeadline { Day = newDay, Month = newMonth, Year = newYear, Hour = newHour, Minute = newMinute };
+
+                        Console.WriteLine($"Tugas '{oldTaskName}' berhasil diubah.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Tanggal baru tidak valid.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Tidak ditemukan tugas dengan nama '{oldTaskName}'.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Tidak ada tugas yang ditemukan.");
+            }
+        }
+
 
         private bool IsValidDate(int day, int month, int year)
         {
