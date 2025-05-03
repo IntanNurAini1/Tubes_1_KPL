@@ -1,0 +1,12 @@
+{
+  "ReminderRules": [
+    {
+      "DaysBefore": 0,
+      "Message": "Hari ini"
+    },
+    {
+      "DaysBefore": 1,
+      "Message": "Besok"
+    }
+  ]
+}

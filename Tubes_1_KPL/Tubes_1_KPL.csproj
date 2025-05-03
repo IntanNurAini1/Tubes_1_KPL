@@ -16,4 +16,10 @@
     <ProjectReference Include="..\API\API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="JSON\reminder_config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using API.Model;
 using ModelTask = API.Model.Task;
 using ModelDeadline = API.Model.Deadline;
+using Tubes_1_KPL.Model;
+using System.Diagnostics;
 
 namespace Tubes_1_KPL.Controller
 {
@@ -148,7 +150,7 @@ namespace Tubes_1_KPL.Controller
             {
                 _loggedInUser = loggedInUser;
                 _taskCreator = taskCreator;
-                _currentState = State.Idle; 
+                _currentState = State.Idle;
             }
 
             public void ExecuteDeleteTask(string taskName)
@@ -188,7 +190,7 @@ namespace Tubes_1_KPL.Controller
                 if (taskToDelete != null)
                 {
 
-                    _taskCreator.DeleteTask(taskName);  
+                    _taskCreator.DeleteTask(taskName);
                     return true;
                 }
 
@@ -205,7 +207,7 @@ namespace Tubes_1_KPL.Controller
             if (!_userTasks.TryGetValue(_loggedInUser, out var tasks))
             {
                 Console.WriteLine("Pengguna tidak memiliki tugas.");
-                return; 
+                return;
             }
 
             var task = tasks.FirstOrDefault(t => t.Name.Equals(taskName, StringComparison.OrdinalIgnoreCase));
@@ -259,6 +261,49 @@ namespace Tubes_1_KPL.Controller
             }
         }
 
+        public void ShowReminders(ReminderConfig config)
+        {
+            DateTime now = DateTime.Now;
+            var userTasks = GetUserTasks();
 
+            foreach (var task in userTasks)
+            {
+                Debug.Assert(task != null, "Task seharusnya tidak null.");
+                Debug.Assert(!string.IsNullOrEmpty(task?.Name), "Task name seharusnya tidak kosong.");
+
+                if (task == null || string.IsNullOrEmpty(task.Name)) continue;
+
+                DateTime deadline = new DateTime(
+                    task.Deadline.Year,
+                    task.Deadline.Month,
+                    task.Deadline.Day,
+                    task.Deadline.Hour,
+                    task.Deadline.Minute,
+                    0
+                );
+                Debug.Assert(Enum.IsDefined(typeof(Status), task.Status), "Status task tidak valid.");
+
+                if (task.Status == Status.Incompleted && now > deadline)
+                {
+                    task.Status = Status.Overdue;
+                    continue;
+                }
+
+                if (task.Status != Status.Incompleted) continue;
+
+                int daysDiff = (deadline.Date - now.Date).Days;
+
+                foreach (var rule in config.ReminderRules)
+                {
+                    Debug.Assert(rule != null, "Reminder rule tidak boleh null.");
+                    Debug.Assert(rule.Message != null, "Reminder message tidak boleh null.");
+
+                    if (daysDiff == rule.DaysBefore)
+                    {
+                        Console.WriteLine($"[Reminder] Tugas '{task.Name}' akan jatuh tempo {rule.Message} pada {deadline}.");
+                    }
+                }
+            }
+        }
     }
 }
