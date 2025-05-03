@@ -51,7 +51,8 @@ internal class Program
                             Console.WriteLine("2. Lihat Tugas Saya");
                             Console.WriteLine("3. Edit Tugas");
                             Console.WriteLine("4. Delete Tugas");
-                            Console.WriteLine("5. Logout");
+                            Console.WriteLine("5. Tandai Tugas Selesai");
+                            Console.WriteLine("6. Logout");
                             Console.Write("Pilih: ");
                             var taskChoice = Console.ReadLine();
 
@@ -146,8 +147,18 @@ internal class Program
                                     var taskAutomata = new TaskAutomata(_loggedInUser, _taskCreator);
                                     taskAutomata.ExecuteDeleteTask(taskNameToDelete);
                                     break;
-
                                 case "5":
+                                    Console.WriteLine("\n=== Tandai Tugas Selesai ===");
+                                    Console.Write("Masukkan nama tugas yang ingin ditandai selesai: ");
+                                    string taskNameToComplete = Console.ReadLine() ?? "";
+
+                                    Console.Write("Apakah tugas ini sudah selesai? (yes/no): ");
+                                    string answer = Console.ReadLine() ?? "";
+
+                                    var taskCreator = new Tubes_1_KPL.Controller.TaskCreator(_loggedInUser);
+                                    taskCreator.MarkTaskAsCompleted(taskNameToComplete, answer);
+                                    break;
+                                case "6":
                                     await automata.Logout();
                                     _loggedInUser = null;
                                     _taskCreator = null;

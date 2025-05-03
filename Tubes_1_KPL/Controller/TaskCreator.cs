@@ -14,6 +14,7 @@ namespace Tubes_1_KPL.Controller
         private static Dictionary<string, List<ModelTask>> _userTasks = new();
         private readonly string _loggedInUser;
 
+
         public TaskCreator(string loggedInUser)
         {
             Contract.Requires(!string.IsNullOrEmpty(loggedInUser));
@@ -195,6 +196,67 @@ namespace Tubes_1_KPL.Controller
             }
 
             public State CurrentState => _currentState;
+        }
+        public void MarkTaskAsCompleted(string taskName, string answer)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(taskName), "Nama tugas tidak boleh kosong.");
+            Contract.Requires(!string.IsNullOrEmpty(answer), "Jawaban tidak boleh kosong.");
+
+            if (!_userTasks.TryGetValue(_loggedInUser, out var tasks))
+            {
+                Console.WriteLine("Pengguna tidak memiliki tugas.");
+                return; 
+            }
+
+            var task = tasks.FirstOrDefault(t => t.Name.Equals(taskName, StringComparison.OrdinalIgnoreCase));
+            if (task == null)
+            {
+                Console.WriteLine($"Tugas '{taskName}' tidak ditemukan.");
+                return;
+            }
+
+            Dictionary<string, Status> answerTable = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "yes", Status.Completed },
+        { "no", Status.Incompleted }
+    };
+
+            if (!answerTable.ContainsKey(answer))
+            {
+                Console.WriteLine("Input tidak valid. Harus 'yes' atau 'no'.");
+                return;
+            }
+
+            Status newStatus = answerTable[answer];
+
+            Console.WriteLine($"[DEBUG] Status lama: {task.Status}, Status baru: {newStatus}");
+
+            switch (task.Status)
+            {
+                case Status.Incompleted:
+                    if (newStatus == Status.Completed)
+                    {
+                        task.Status = Status.Completed;
+                        Console.WriteLine($"Tugas '{taskName}' berhasil ditandai selesai.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Tugas '{taskName}' tetap dalam status belum selesai.");
+                    }
+                    break;
+
+                case Status.Completed:
+                    Console.WriteLine($"Tugas '{taskName}' sudah selesai sebelumnya.");
+                    break;
+
+                case Status.Overdue:
+                    Console.WriteLine($"Tugas '{taskName}' sudah melewati batas waktu.");
+                    break;
+
+                default:
+                    Console.WriteLine("Status tidak dikenali.");
+                    break;
+            }
         }
 
 
