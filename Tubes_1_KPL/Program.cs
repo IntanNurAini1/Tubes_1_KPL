@@ -6,6 +6,7 @@ using Tubes_1_KPL.Controller;
 using Tubes_1_KPL.Model;
 using ModelTask = API.Model.Task;
 using ModelDeadline = API.Model.Deadline;
+using static Tubes_1_KPL.Controller.TaskCreator;
 
 internal class Program
 {
@@ -49,7 +50,8 @@ internal class Program
                             Console.WriteLine("1. Buat Tugas");
                             Console.WriteLine("2. Lihat Tugas Saya");
                             Console.WriteLine("3. Edit Tugas");
-                            Console.WriteLine("4. Logout");
+                            Console.WriteLine("4. Delete Tugas");
+                            Console.WriteLine("5. Logout");
                             Console.Write("Pilih: ");
                             var taskChoice = Console.ReadLine();
 
@@ -138,8 +140,14 @@ internal class Program
                                     }
                                     else { Console.WriteLine("Format hari tidak valid."); }
                                     break;
+                                case "4": 
+                                    Console.Write("Masukkan nama tugas yang ingin dihapus: ");
+                                    string taskNameToDelete = Console.ReadLine();
+                                    var taskAutomata = new TaskAutomata(_loggedInUser, _taskCreator);
+                                    taskAutomata.ExecuteDeleteTask(taskNameToDelete);
+                                    break;
 
-                                case "4":
+                                case "5":
                                     await automata.Logout();
                                     _loggedInUser = null;
                                     _taskCreator = null;

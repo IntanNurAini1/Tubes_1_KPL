@@ -111,5 +111,92 @@ namespace Tubes_1_KPL.Controller
         {
             return day <= DateTime.DaysInMonth(year, month);
         }
+
+        public void DeleteTask(string taskName)
+        {
+            Contract.Requires(!string.IsNullOrEmpty(taskName), "Nama tugas harus diisi.");
+
+            if (_userTasks.TryGetValue(_loggedInUser, out var tasks))
+            {
+                var taskToDelete = tasks.FirstOrDefault(t => t.Name.Equals(taskName, StringComparison.OrdinalIgnoreCase));
+                if (taskToDelete != null)
+                {
+                    tasks.Remove(taskToDelete);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Tidak ada tugas yang ditemukan.");
+            }
+        }
+
+        public class TaskAutomata
+        {
+            public enum State
+            {
+                Idle,
+                TaskDelete,
+                TaskDeleted
+            }
+
+            private State _currentState;
+            private readonly TaskCreator _taskCreator;
+            private readonly string _loggedInUser;
+
+            public TaskAutomata(string loggedInUser, TaskCreator taskCreator)
+            {
+                _loggedInUser = loggedInUser;
+                _taskCreator = taskCreator;
+                _currentState = State.Idle; 
+            }
+
+            public void ExecuteDeleteTask(string taskName)
+            {
+                if (_currentState == State.Idle)
+                {
+                    _currentState = State.TaskDelete;
+                    bool taskDeleted = DeleteTask(taskName);
+
+                    if (taskDeleted)
+                    {
+                        _currentState = State.TaskDeleted;
+                        Console.WriteLine($"Tugas '{taskName}' berhasil dihapus.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Tugas dengan nama '{taskName}' tidak ditemukan.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Operasi tidak bisa dijalankan lebih dari sekali.");
+                }
+            }
+
+            private bool DeleteTask(string taskName)
+            {
+                if (string.IsNullOrEmpty(_loggedInUser))
+                {
+                    Console.WriteLine("Anda harus login terlebih dahulu.");
+                    return false;
+                }
+
+                var tasks = _taskCreator.GetUserTasks();
+                var taskToDelete = tasks.FirstOrDefault(t => t.Name.Equals(taskName, StringComparison.OrdinalIgnoreCase));
+
+                if (taskToDelete != null)
+                {
+
+                    _taskCreator.DeleteTask(taskName);  
+                    return true;
+                }
+
+                return false;
+            }
+
+            public State CurrentState => _currentState;
+        }
+
+
     }
 }
