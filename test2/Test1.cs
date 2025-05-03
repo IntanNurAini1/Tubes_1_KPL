@@ -2,7 +2,7 @@
 using Tubes_1_KPL.Controller;
 using API.Model;
 using System.Collections.Generic;
-using ModelTask = API.Model.Task; // Alias untuk hindari konflik dengan System.Threading.Tasks.Task
+using ModelTask = API.Model.Task;
 
 namespace Tubes_1_KPL.Tests
 {
@@ -27,7 +27,7 @@ namespace Tubes_1_KPL.Tests
             Assert.AreEqual(description, tasks[0].Description);
             Assert.AreEqual(userId, tasks[0].UserId);
             Assert.AreEqual(day, tasks[0].Deadline.Day);
-            Assert.AreEqual(4, tasks[0].Deadline.Month); // April = 4
+            Assert.AreEqual(4, tasks[0].Deadline.Month);
         }
 
         [TestMethod]

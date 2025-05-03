@@ -16,7 +16,7 @@ namespace API.Model
             Description = description;
             Deadline = deadline;
             UserId = userId;
-            Id = Guid.NewGuid().ToString(); // ✅ Generate otomatis
+            Id = Guid.NewGuid().ToString();
         }
 
         public override string ToString()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Tubes_1_KPL.Controller;
 using Tubes_1_KPL.Model;
@@ -47,7 +48,8 @@ internal class Program
                             Console.WriteLine("\nPilih opsi:");
                             Console.WriteLine("1. Buat Tugas");
                             Console.WriteLine("2. Lihat Tugas Saya");
-                            Console.WriteLine("3. Logout");
+                            Console.WriteLine("3. Edit Tugas");
+                            Console.WriteLine("4. Logout");
                             Console.Write("Pilih: ");
                             var taskChoice = Console.ReadLine();
 
@@ -102,6 +104,42 @@ internal class Program
                                     break;
 
                                 case "3":
+                                    Console.Write("Masukkan nama tugas yang ingin diubah: ");
+                                    string oldTaskName = Console.ReadLine();
+
+                                    Console.Write("Nama tugas baru: ");
+                                    string newName = Console.ReadLine();
+
+                                    Console.Write("Deskripsi tugas baru: ");
+                                    string newDescription = Console.ReadLine();
+
+                                    Console.Write("Tanggal baru (1-31): ");
+                                    if (int.TryParse(Console.ReadLine(), out int newDay))
+                                    {
+                                        Console.Write("Bulan baru (misalnya, januari): ");
+                                        string newMonth = Console.ReadLine();
+
+                                        Console.Write("Tahun baru: ");
+                                        if (int.TryParse(Console.ReadLine(), out int newYear))
+                                        {
+                                            Console.Write("Jam baru (0-23): ");
+                                            if (int.TryParse(Console.ReadLine(), out int newHour))
+                                            {
+                                                Console.Write("Menit baru (0-59): ");
+                                                if (int.TryParse(Console.ReadLine(), out int newMinute))
+                                                {
+                                                    _taskCreator.EditTask(oldTaskName, newName, newDescription, newDay, newMonth, newYear, newHour, newMinute);
+                                                }
+                                                else { Console.WriteLine("Format menit tidak valid."); }
+                                            }
+                                            else { Console.WriteLine("Format jam tidak valid."); }
+                                        }
+                                        else { Console.WriteLine("Format tahun tidak valid."); }
+                                    }
+                                    else { Console.WriteLine("Format hari tidak valid."); }
+                                    break;
+
+                                case "4":
                                     await automata.Logout();
                                     _loggedInUser = null;
                                     _taskCreator = null;
