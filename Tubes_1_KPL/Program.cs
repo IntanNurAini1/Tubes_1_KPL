@@ -59,6 +59,8 @@ internal class Program
                             Console.Write("Pilih: ");
                             var taskChoice = Console.ReadLine();
 
+                            const string TASK_COMPLETE = "8", TASK_ONGOING = "6", TASK_DEADLINE = "7";
+
                             switch (taskChoice)
                             {
                                 case "1":
@@ -82,7 +84,7 @@ internal class Program
                                                 Console.Write("Menit (0-59): ");
                                                 if (int.TryParse(Console.ReadLine(), out int minute))
                                                 {
-                                                    _taskCreator.CreateTask(name, description, day, month, year, hour, minute);
+                                                    await _taskCreator.CreateTaskAsync(name, description, day, month, year, hour, minute);
                                                 }
                                                 else { Console.WriteLine("Format menit tidak valid."); }
                                             }

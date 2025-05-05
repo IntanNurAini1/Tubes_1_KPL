@@ -21,7 +21,7 @@ namespace Test4
             {
                 _loggedInUser = "user1";
                 _taskCreator = new TaskCreator(_loggedInUser);
-                _taskCreator.CreateTask("Test Task", "Description of test task", 1, "Januari", 2025, 10, 30);
+                _taskCreator.CreateTaskAsync("Test Task", "Description of test task", 1, "Januari", 2025, 10, 30);
             }
 
             [TestMethod]

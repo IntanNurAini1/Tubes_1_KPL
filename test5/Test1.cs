@@ -15,7 +15,7 @@ namespace test5
             string userId = "user123";
             var taskCreator = new TaskCreator(userId);
 
-            taskCreator.CreateTask(
+            taskCreator.CreateTaskAsync(
                 name: "Tugas Uji",
                 description: "Deskripsi uji",
                 day: 10,

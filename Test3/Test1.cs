@@ -25,7 +25,7 @@ namespace Test3
             string description = "Deskripsi tugas 1";
             int day = 5, month = 1, year = 2025, hour = 14, minute = 30;
 
-            _taskCreator.CreateTask(name, description, day, "Januari", year, hour, minute);
+            _taskCreator.CreateTaskAsync(name, description, day, "Januari", year, hour, minute);
 
             var tasks = _taskCreator.GetUserTasks();
             var createdTask = tasks.Find(t => t.Name == name); // mencari task dengan nama yang sama
@@ -41,7 +41,7 @@ namespace Test3
             string newDescription = "Deskripsi tugas yang diperbarui";
             int newDay = 10, newMonth = 1, newYear = 2025, newHour = 16, newMinute = 45;
 
-            _taskCreator.CreateTask(oldTaskName, "Deskripsi tugas 1", 5, "Januari", 2025, 14, 30);
+            _taskCreator.CreateTaskAsync(oldTaskName, "Deskripsi tugas 1", 5, "Januari", 2025, 14, 30);
 
             _taskCreator.EditTask(oldTaskName, newTaskName, newDescription, newDay, "Januari", newYear, newHour, newMinute);
 

@@ -7,6 +7,9 @@ using ModelTask = API.Model.Task;
 using ModelDeadline = API.Model.Deadline;
 using Tubes_1_KPL.Model;
 using System.Diagnostics;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text;
 
 namespace Tubes_1_KPL.Controller
 {
@@ -16,9 +19,13 @@ namespace Tubes_1_KPL.Controller
         private static Dictionary<string, List<ModelTask>> _userTasks = new();
         private readonly string _loggedInUser;
 
+        protected readonly HttpClient _http;
 
         public TaskCreator(string loggedInUser)
         {
+            _http = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            Contract.Invariant(_http != null);
+
             Contract.Requires(!string.IsNullOrEmpty(loggedInUser));
 
             _loggedInUser = loggedInUser;
@@ -35,7 +42,7 @@ namespace Tubes_1_KPL.Controller
             }
         }
 
-        public void CreateTask(string name, string description, int day, string monthString, int year, int hour, int minute)
+        public async System.Threading.Tasks.Task CreateTaskAsync(string name, string description, int day, string monthString, int year, int hour, int minute)
         {
             Contract.Requires(!string.IsNullOrEmpty(name));
             Contract.Requires(!string.IsNullOrEmpty(description));
@@ -54,6 +61,19 @@ namespace Tubes_1_KPL.Controller
                     var deadline = new ModelDeadline { Day = day, Month = month, Year = year, Hour = hour, Minute = minute };
                     var task = new ModelTask(name, description, deadline, _loggedInUser);
                     tasks.Add(task);
+
+                    var jsonContent = JsonSerializer.Serialize(task);
+                    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                    var response = await _http.PostAsync("task", content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine("Tugas berhasil dibuat di API.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Gagal membuat tugas di API. Status: {response.StatusCode}");
+                    }
                 }
                 else
                 {
@@ -303,6 +323,46 @@ namespace Tubes_1_KPL.Controller
                         Console.WriteLine($"[Reminder] Tugas '{task.Name}' akan jatuh tempo {rule.Message} pada {deadline}.");
                     }
                 }
+            }
+        }
+        public async Task<List<ModelTask>> GetOngoingTasksAsync()
+        {
+            return await GetTasksFromApiAsync("task/ongoing");
+        }
+
+        public async Task<List<ModelTask>> GetOverdueTasksAsync()
+        {
+            return await GetTasksFromApiAsync("task/overdue");
+        }
+
+        public async Task<List<ModelTask>> GetCompletedTasksAsync()
+        {
+            return await GetTasksFromApiAsync("task/completed");
+        }
+
+        private async Task<List<ModelTask>> GetTasksFromApiAsync(string endpoint)
+        {
+            try
+            {
+                var response = await _http.GetAsync($"{endpoint}?userId={_loggedInUser}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<List<ModelTask>>(jsonResponse, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<ModelTask>();
+                }
+                else
+                {
+                    Console.WriteLine($"Gagal mengambil data dari API. Status: {response.StatusCode}");
+                    return new List<ModelTask>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Terjadi kesalahan saat menghubungi API: {ex.Message}");
+                return new List<ModelTask>();
             }
         }
     }

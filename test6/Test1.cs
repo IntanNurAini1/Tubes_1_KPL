@@ -22,7 +22,7 @@ namespace test6
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
-            taskCreator.CreateTask(
+            taskCreator.CreateTaskAsync(
                 "Tugas Hari Ini",
                 "Deskripsi",
                 today.Day,
@@ -31,7 +31,7 @@ namespace test6
                 9, 0
             );
 
-            taskCreator.CreateTask(
+            taskCreator.CreateTaskAsync(
                 "Tugas Besok",
                 "Deskripsi",
                 tomorrow.Day,

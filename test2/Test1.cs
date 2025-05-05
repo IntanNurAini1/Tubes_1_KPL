@@ -19,7 +19,7 @@ namespace Tubes_1_KPL.Tests
             int day = 20, year = 2025, hour = 10, minute = 30;
             string month = "April";
 
-            taskCreator.CreateTask(name, description, day, month, year, hour, minute);
+            taskCreator.CreateTaskAsync(name, description, day, month, year, hour, minute);
             List<ModelTask> tasks = taskCreator.GetUserTasks();
 
             Assert.AreEqual(1, tasks.Count);
@@ -34,7 +34,7 @@ namespace Tubes_1_KPL.Tests
         public void CreateTask_ShouldNotAddTask_WhenInvalidDate()
         {
             var taskCreator = new TaskCreator("user123");
-            taskCreator.CreateTask("Invalid Task", "Deskripsi", 31, "Februari", 2025, 10, 0);
+            taskCreator.CreateTaskAsync("Invalid Task", "Deskripsi", 31, "Februari", 2025, 10, 0);
             List<ModelTask> tasks = taskCreator.GetUserTasks();
 
             Assert.AreEqual(0, tasks.Count);

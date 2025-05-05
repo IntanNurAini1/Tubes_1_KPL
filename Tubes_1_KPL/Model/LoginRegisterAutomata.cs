@@ -69,6 +69,10 @@ namespace Tubes_1_KPL.Model
 
             return success;
         }
+        public async Task Login(string username, string password)
+        {
+            await TryLoginAsync(username, password);
+        }
 
         public async Task Logout()
         {
