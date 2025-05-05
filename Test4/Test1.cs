@@ -20,8 +20,9 @@ namespace Test4
             public void TestInitialize()
             {
                 _loggedInUser = "user1";
-                _taskCreator = new TaskCreator(_loggedInUser);
-                _taskCreator.CreateTask("Test Task", "Description of test task", 1, "Januari", 2025, 10, 30);
+                var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+                _taskCreator = new TaskCreator(_loggedInUser, httpClient);
+                _taskCreator.CreateTaskAsync("Test Task", "Description of test task", 1, "Januari", 2025, 10, 30);
             }
 
             [TestMethod]

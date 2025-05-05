@@ -1,0 +1,14 @@
+[
+  {
+    "Id": 3,
+    "Username": "fahrezabahran",
+    "Password": "jakarta",
+    "IsLoggedIn": false
+  },
+  {
+    "Id": 3,
+    "Username": "agus",
+    "Password": "agus",
+    "IsLoggedIn": false
+  }
+]

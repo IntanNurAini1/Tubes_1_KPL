@@ -15,14 +15,15 @@ namespace test6
         [TestMethod]
         public void ShowReminders_ShouldPrintCorrectReminderMessages()
         {
-            var taskCreator = new TaskCreator("testuser");
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            var taskCreator = new TaskCreator("testuser", httpClient);
 
             var culture = new CultureInfo("id-ID");
 
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
-            taskCreator.CreateTask(
+            taskCreator.CreateTaskAsync(
                 "Tugas Hari Ini",
                 "Deskripsi",
                 today.Day,
@@ -31,7 +32,7 @@ namespace test6
                 9, 0
             );
 
-            taskCreator.CreateTask(
+            taskCreator.CreateTaskAsync(
                 "Tugas Besok",
                 "Deskripsi",
                 tomorrow.Day,

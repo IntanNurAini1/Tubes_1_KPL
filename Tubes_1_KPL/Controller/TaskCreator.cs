@@ -7,6 +7,11 @@ using ModelTask = API.Model.Task;
 using ModelDeadline = API.Model.Deadline;
 using Tubes_1_KPL.Model;
 using System.Diagnostics;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text;
+using static System.Net.WebRequestMethods;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Tubes_1_KPL.Controller
 {
@@ -16,10 +21,15 @@ namespace Tubes_1_KPL.Controller
         private static Dictionary<string, List<ModelTask>> _userTasks = new();
         private readonly string _loggedInUser;
 
+        private readonly HttpClient _http;
 
-        public TaskCreator(string loggedInUser)
+        public TaskCreator(string loggedInUser, HttpClient httpClient)
         {
-            Contract.Requires(!string.IsNullOrEmpty(loggedInUser));
+            Contract.Requires(httpClient != null, "HttpClient tidak boleh null.");
+            Contract.Requires(!string.IsNullOrEmpty(loggedInUser), "LoggedInUser tidak boleh null atau kosong.");
+
+            _http = httpClient;
+            _loggedInUser = loggedInUser;
 
             _loggedInUser = loggedInUser;
             _monthTable = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
@@ -35,7 +45,7 @@ namespace Tubes_1_KPL.Controller
             }
         }
 
-        public void CreateTask(string name, string description, int day, string monthString, int year, int hour, int minute)
+        public async System.Threading.Tasks.Task CreateTaskAsync(string name, string description, int day, string monthString, int year, int hour, int minute)
         {
             Contract.Requires(!string.IsNullOrEmpty(name));
             Contract.Requires(!string.IsNullOrEmpty(description));
@@ -54,6 +64,19 @@ namespace Tubes_1_KPL.Controller
                     var deadline = new ModelDeadline { Day = day, Month = month, Year = year, Hour = hour, Minute = minute };
                     var task = new ModelTask(name, description, deadline, _loggedInUser);
                     tasks.Add(task);
+
+                    var jsonContent = JsonSerializer.Serialize(task);
+                    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                    var response = await _http.PostAsync("task", content);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine("Tugas berhasil dibuat di API.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Gagal membuat tugas di API. Status: {response.StatusCode}");
+                    }
                 }
                 else
                 {
@@ -66,8 +89,8 @@ namespace Tubes_1_KPL.Controller
         {
             return _userTasks.TryGetValue(_loggedInUser, out var tasks) ? new List<ModelTask>(tasks) : new List<ModelTask>();
         }
-
-        public void EditTask(string oldTaskName, string newName, string newDescription, int newDay, string newMonthString, int newYear, int newHour, int newMinute)
+            
+        public async System.Threading.Tasks.Task EditTask(string oldTaskName, string newName, string newDescription, int newDay, string newMonthString, int newYear, int newHour, int newMinute)
         {
             Contract.Requires(!string.IsNullOrEmpty(oldTaskName), "Nama tugas lama harus diisi.");
             Contract.Requires(!string.IsNullOrEmpty(newName), "Nama tugas baru harus diisi.");
@@ -90,7 +113,9 @@ namespace Tubes_1_KPL.Controller
                         taskToEdit.Name = newName;
                         taskToEdit.Description = newDescription;
                         taskToEdit.Deadline = new ModelDeadline { Day = newDay, Month = newMonth, Year = newYear, Hour = newHour, Minute = newMinute };
-
+                        var jsonContent = JsonSerializer.Serialize(taskToEdit);
+                        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                        var response = await _http.PutAsync($"task/{_loggedInUser}", content);
                         Console.WriteLine($"Tugas '{oldTaskName}' berhasil diubah.");
                     }
                     else
@@ -153,12 +178,12 @@ namespace Tubes_1_KPL.Controller
                 _currentState = State.Idle;
             }
 
-            public void ExecuteDeleteTask(string taskName)
+            public async System.Threading.Tasks.Task ExecuteDeleteTask(string taskName)
             {
                 if (_currentState == State.Idle)
                 {
                     _currentState = State.TaskDelete;
-                    bool taskDeleted = DeleteTask(taskName);
+                    bool taskDeleted = await DeleteTask(taskName);
 
                     if (taskDeleted)
                     {
@@ -176,7 +201,7 @@ namespace Tubes_1_KPL.Controller
                 }
             }
 
-            private bool DeleteTask(string taskName)
+            private async Task<bool> DeleteTask(string taskName)
             {
                 if (string.IsNullOrEmpty(_loggedInUser))
                 {
@@ -189,9 +214,13 @@ namespace Tubes_1_KPL.Controller
 
                 if (taskToDelete != null)
                 {
+                    var response = await _taskCreator._http.DeleteAsync($"task/{_loggedInUser}?taskName={Uri.EscapeDataString(taskName)}");
 
-                    _taskCreator.DeleteTask(taskName);
-                    return true;
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _taskCreator.DeleteTask(taskName);
+                        return true;
+                    }
                 }
 
                 return false;
@@ -199,7 +228,9 @@ namespace Tubes_1_KPL.Controller
 
             public State CurrentState => _currentState;
         }
-        public void MarkTaskAsCompleted(string taskName, string answer)
+
+
+        public async System.Threading.Tasks.Task MarkTaskAsCompleted(string taskName, string answer)
         {
             Contract.Requires(!string.IsNullOrEmpty(taskName), "Nama tugas tidak boleh kosong.");
             Contract.Requires(!string.IsNullOrEmpty(answer), "Jawaban tidak boleh kosong.");
@@ -218,10 +249,10 @@ namespace Tubes_1_KPL.Controller
             }
 
             Dictionary<string, Status> answerTable = new(StringComparer.OrdinalIgnoreCase)
-    {
-        { "yes", Status.Completed },
-        { "no", Status.Incompleted }
-    };
+            {
+                { "yes", Status.Completed },
+                { "no", Status.Incompleted }
+            };
 
             if (!answerTable.ContainsKey(answer))
             {
@@ -239,6 +270,9 @@ namespace Tubes_1_KPL.Controller
                     if (newStatus == Status.Completed)
                     {
                         task.Status = Status.Completed;
+                        var jsonContent = JsonSerializer.Serialize(task);
+                        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                        var response = await _http.PutAsync($"task/{_loggedInUser}/{taskName}", content);
                         Console.WriteLine($"Tugas '{taskName}' berhasil ditandai selesai.");
                     }
                     else
@@ -303,6 +337,51 @@ namespace Tubes_1_KPL.Controller
                         Console.WriteLine($"[Reminder] Tugas '{task.Name}' akan jatuh tempo {rule.Message} pada {deadline}.");
                     }
                 }
+            }
+        }
+
+        public async Task<List<ModelTask>> GetOngoingTasksAsync()
+        {
+            return await GetTasksFromApiAsync($"task/ongoing/{_loggedInUser}");
+        }
+
+        public async Task<List<ModelTask>> GetOverdueTasksAsync()
+        {
+            return await GetTasksFromApiAsync($"task/overdue/{_loggedInUser}");
+        }
+
+        public async Task<List<ModelTask>> GetCompletedTasksAsync()
+        {
+            return await GetTasksFromApiAsync($"task/completed/{_loggedInUser}");
+        }
+
+        private async Task<List<ModelTask>> GetTasksFromApiAsync(string endpoint)
+        {
+            try
+            {
+                var response = await _http.GetAsync($"{endpoint}?userId={_loggedInUser}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<List<ModelTask>>(jsonResponse, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<ModelTask>();
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return new List<ModelTask>();
+                } 
+                else
+                {
+                    Console.WriteLine($"Gagal mengambil data dari API. Status: {response.StatusCode}");
+                    return new List<ModelTask>();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Terjadi kesalahan saat menghubungi API: {ex.Message}");
+                return new List<ModelTask>();
             }
         }
     }

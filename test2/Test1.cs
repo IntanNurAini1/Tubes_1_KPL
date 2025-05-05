@@ -13,13 +13,14 @@ namespace Tubes_1_KPL.Tests
         public void CreateTask_ShouldAddTask_WhenValidInput()
         {
             string userId = "user123";
-            var taskCreator = new TaskCreator(userId);
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            var taskCreator = new TaskCreator(userId, httpClient);
             string name = "Tugas UTS";
             string description = "Kerjakan soal nomor 1-5";
             int day = 20, year = 2025, hour = 10, minute = 30;
             string month = "April";
 
-            taskCreator.CreateTask(name, description, day, month, year, hour, minute);
+            taskCreator.CreateTaskAsync(name, description, day, month, year, hour, minute);
             List<ModelTask> tasks = taskCreator.GetUserTasks();
 
             Assert.AreEqual(1, tasks.Count);
@@ -33,8 +34,9 @@ namespace Tubes_1_KPL.Tests
         [TestMethod]
         public void CreateTask_ShouldNotAddTask_WhenInvalidDate()
         {
-            var taskCreator = new TaskCreator("user123");
-            taskCreator.CreateTask("Invalid Task", "Deskripsi", 31, "Februari", 2025, 10, 0);
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            var taskCreator = new TaskCreator("user123", httpClient);
+            taskCreator.CreateTaskAsync("Invalid Task", "Deskripsi", 31, "Februari", 2025, 10, 0);
             List<ModelTask> tasks = taskCreator.GetUserTasks();
 
             Assert.AreEqual(0, tasks.Count);
@@ -43,7 +45,8 @@ namespace Tubes_1_KPL.Tests
         [TestMethod]
         public void GetUserTasks_ShouldReturnEmptyList_WhenNoTasks()
         {
-            var taskCreator = new TaskCreator("userABC");
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            var taskCreator = new TaskCreator("userABC", httpClient);
             List<ModelTask> tasks = taskCreator.GetUserTasks();
 
             Assert.AreEqual(0, tasks.Count);

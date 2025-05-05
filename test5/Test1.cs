@@ -13,9 +13,10 @@ namespace test5
         public void TestMethod1_MarkTaskAsCompleted_ShouldUpdateStatusToCompleted()
         {
             string userId = "user123";
-            var taskCreator = new TaskCreator(userId);
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            var taskCreator = new TaskCreator(userId, httpClient);
 
-            taskCreator.CreateTask(
+            taskCreator.CreateTaskAsync(
                 name: "Tugas Uji",
                 description: "Deskripsi uji",
                 day: 10,
