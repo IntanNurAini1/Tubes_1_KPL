@@ -1,0 +1,26 @@
+[
+  {
+    "Id": 1,
+    "Username": "admin",
+    "Password": "admin123",
+    "IsLoggedIn": false
+  },
+  {
+    "Id": 2,
+    "Username": "user",
+    "Password": "user123",
+    "IsLoggedIn": false
+  },
+  {
+    "Id": 3,
+    "Username": "in",
+    "Password": "in",
+    "IsLoggedIn": false
+  },
+  {
+    "Id": 4,
+    "Username": "int",
+    "Password": "int",
+    "IsLoggedIn": true
+  }
+]

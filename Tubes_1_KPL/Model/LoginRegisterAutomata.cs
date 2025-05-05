@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Tubes_1_KPL.Controller;
 
@@ -51,14 +50,14 @@ namespace Tubes_1_KPL.Model
             await _controller.RegisterAsync(username, password);
         }
 
-        public async Task Login(string username, string password)
+        public async Task<bool> TryLoginAsync(string username, string password)
         {
             Contract.Requires(_currentState == State.LoggedOut);
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
                 Console.WriteLine("Username/password tidak boleh kosong.");
-                return;
+                return false;
             }
 
             var success = await _controller.TryLoginAsync(username, password);
@@ -67,6 +66,12 @@ namespace Tubes_1_KPL.Model
                 _currentState = State.LoggedIn;
                 _currentUser = username;
             }
+
+            return success;
+        }
+        public async Task Login(string username, string password)
+        {
+            await TryLoginAsync(username, password);
         }
 
         public async Task Logout()
