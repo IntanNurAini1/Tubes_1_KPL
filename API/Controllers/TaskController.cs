@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using API.Model;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Task = API.Model.Task;
@@ -8,7 +10,7 @@ using Task = API.Model.Task;
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/task")]
+    [Route("api/[controller]")]
     public class TaskController : ControllerBase
     {
         private static List<Task> tasks = new List<Task>();
@@ -46,14 +48,12 @@ namespace API.Controllers
 
             try
             {
-                // Coba deserialize sebagai list
                 tasks = JsonSerializer.Deserialize<List<Task>>(jsonData) ?? new List<Task>();
             }
             catch (JsonException)
             {
                 try
                 {
-                    // Jika gagal, coba deserialize sebagai satu objek tunggal
                     var singleTask = JsonSerializer.Deserialize<Task>(jsonData);
                     if (singleTask != null)
                     {
@@ -122,7 +122,6 @@ namespace API.Controllers
             taskToUpdate.Status = updatedTask.Status;
 
             SaveTasksToFile();
-
             return NoContent();
         }
 
@@ -136,7 +135,6 @@ namespace API.Controllers
 
             tasks.Remove(taskToDelete);
             SaveTasksToFile();
-
             return NoContent();
         }
 
@@ -145,29 +143,6 @@ namespace API.Controllers
         {
             if (string.IsNullOrEmpty(username))
                 return BadRequest("Username is required.");
-            LoadTasksFromFile();
-            var ongoingTasks = tasks.Where(t => t.UserId == username && t.Status == Status.Incompleted).ToList();
-            return Ok(ongoingTasks);
-        }
 
-        [HttpGet("overdue/{username}")]
-        public IActionResult GetOverdueTasks(string username)
-        {
-            if (string.IsNullOrEmpty(username))
-                return BadRequest("Username is required.");
             LoadTasksFromFile();
-            var overdueTasks = tasks.Where(t => t.UserId == username && t.Status == Status.Overdue).ToList();
-            return Ok(overdueTasks);
-        }
-
-        [HttpGet("completed/{username}")]
-        public IActionResult GetCompletedTasks(string username)
-        {
-            if (string.IsNullOrEmpty(username))
-                return BadRequest("Username is required.");
-            LoadTasksFromFile();
-            var completedTasks = tasks.Where(t => t.UserId == username && t.Status == Status.Completed).ToList();
-            return Ok(completedTasks);
-        }
-    }
-}
+            var ongoingTasks = tasks.Where(t

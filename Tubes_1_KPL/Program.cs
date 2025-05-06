@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Tubes_1_KPL.Controller;
 using Tubes_1_KPL.Model;
@@ -52,7 +52,6 @@ internal class Program
 
                             Console.WriteLine("\nPilih opsi:");
                             Console.WriteLine("1. Buat Tugas");
-                            //Console.WriteLine("2. Lihat Tugas Saya");
                             Console.WriteLine("2. Edit Tugas");
                             Console.WriteLine("3. Delete Tugas");
                             Console.WriteLine("4. Tandai Tugas Selesai");
@@ -62,11 +61,6 @@ internal class Program
                             Console.WriteLine("8. Logout");
                             Console.Write("Pilih: ");
                             var taskChoice = Console.ReadLine();
-
-                            const string
-                                TASK_ONGOING = "5",
-                                TASK_DEADLINE = "6",
-                                TASK_COMPLETE = "7"; 
 
                             switch (taskChoice)
                             {
@@ -101,22 +95,6 @@ internal class Program
                                     }
                                     else { Console.WriteLine("Format hari tidak valid."); }
                                     break;
-
-                                //case "2":
-                                //    List<ModelTask> tasks = _taskCreator.GetUserTasks();
-                                //    if (tasks.Count > 0)
-                                //    {
-                                //        Console.WriteLine($"Tugas untuk {_loggedInUser}:");
-                                //        foreach (ModelTask task in tasks)
-                                //        {
-                                //            Console.WriteLine(task.ToString());
-                                //        }
-                                //    }
-                                //    else
-                                //    {
-                                //        Console.WriteLine($"Tidak ada tugas untuk {_loggedInUser}.");
-                                //    }
-                                //    break;
 
                                 case "2":
                                     Console.Write("Masukkan nama tugas yang ingin diubah: ");
@@ -168,11 +146,10 @@ internal class Program
 
                                     Console.Write("Apakah tugas ini sudah selesai? (yes/no): ");
                                     string answer = Console.ReadLine() ?? "";
-                                    var taskCreator = new TaskCreator(_loggedInUser, httpClient);
-                                    await taskCreator.MarkTaskAsCompleted(taskNameToComplete, answer);
+                                    await _taskCreator.MarkTaskAsCompleted(taskNameToComplete, answer);
                                     break;
 
-                                case TASK_ONGOING:
+                                case "5":
                                     Console.WriteLine("\n=== Tugas Ongoing ===");
                                     try
                                     {
@@ -196,7 +173,7 @@ internal class Program
                                     }
                                     break;
 
-                                case TASK_DEADLINE:
+                                case "6":
                                     Console.WriteLine("\n=== Tugas Deadline ===");
                                     try
                                     {
@@ -220,7 +197,7 @@ internal class Program
                                     }
                                     break;
 
-                                case TASK_COMPLETE:
+                                case "7":
                                     Console.WriteLine("\n=== Tugas Complete ===");
                                     try
                                     {
@@ -243,7 +220,8 @@ internal class Program
                                         Console.WriteLine($"Terjadi kesalahan: {ex.Message}");
                                     }
                                     break;
-                                case "9":
+
+                                case "8":
                                     await automata.Logout();
                                     _loggedInUser = null;
                                     _taskCreator = null;
