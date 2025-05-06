@@ -15,7 +15,8 @@ namespace Test3
         [TestInitialize]
         public void Setup()
         {
-            _taskCreator = new TaskCreator("testuser");
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            _taskCreator = new TaskCreator("testuser", httpClient);
         }
 
         [TestMethod]

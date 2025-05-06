@@ -15,7 +15,8 @@ namespace test6
         [TestMethod]
         public void ShowReminders_ShouldPrintCorrectReminderMessages()
         {
-            var taskCreator = new TaskCreator("testuser");
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5263/api/") };
+            var taskCreator = new TaskCreator("testuser", httpClient);
 
             var culture = new CultureInfo("id-ID");
 

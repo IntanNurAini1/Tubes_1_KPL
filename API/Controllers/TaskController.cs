@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using API.Model;
-using System.Collections.Generic;
-using System.Linq;
-using Task = API.Model.Task;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using Task = API.Model.Task;
 
 namespace API.Controllers
 {
@@ -13,82 +15,134 @@ namespace API.Controllers
     {
         private static List<Task> tasks = new List<Task>();
 
-        // CREATE: Add a new task
+        private string GetFilePath()
+        {
+            string projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", ".."));
+            string folderPath = Path.Combine(projectRoot, "Data");
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            return Path.Combine(folderPath, "task.json");
+        }
+
+        private void LoadTasksFromFile()
+        {
+            string filePath = GetFilePath();
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                tasks = new List<Task>();
+                return;
+            }
+
+            string jsonData = System.IO.File.ReadAllText(filePath);
+
+            if (string.IsNullOrWhiteSpace(jsonData))
+            {
+                tasks = new List<Task>();
+                return;
+            }
+
+            try
+            {
+                tasks = JsonSerializer.Deserialize<List<Task>>(jsonData) ?? new List<Task>();
+            }
+            catch (JsonException)
+            {
+                try
+                {
+                    var singleTask = JsonSerializer.Deserialize<Task>(jsonData);
+                    if (singleTask != null)
+                    {
+                        tasks = new List<Task> { singleTask };
+                    }
+                    else
+                    {
+                        tasks = new List<Task>();
+                    }
+                }
+                catch
+                {
+                    tasks = new List<Task>();
+                }
+            }
+        }
+
+        private void SaveTasksToFile()
+        {
+            string filePath = GetFilePath();
+            string updatedJsonData = JsonSerializer.Serialize(tasks, new JsonSerializerOptions { WriteIndented = true });
+            System.IO.File.WriteAllText(filePath, updatedJsonData);
+        }
+
         [HttpPost]
         public IActionResult CreateTask([FromBody] Task newTask)
         {
             if (newTask == null)
                 return BadRequest("Task data is invalid.");
 
+            LoadTasksFromFile();
             tasks.Add(newTask);
-            return CreatedAtAction(nameof(GetTaskByName), new { taskName = newTask.Name, userId = newTask.UserId }, newTask);
+            SaveTasksToFile();
+
+            return CreatedAtAction(nameof(GetTaskById), new { id = newTask.Id }, newTask);
         }
 
-        // READ: Get all tasks
         [HttpGet]
         public IActionResult GetAllTasks()
         {
+            LoadTasksFromFile();
             return Ok(tasks);
         }
 
-        // ✅ READ: Get task by task name (and optional userId)
-        [HttpGet("by-name")]
-        public IActionResult GetTaskByName([FromQuery] string taskName, [FromQuery] string userId = null)
+        [HttpGet("{id}")]
+        public IActionResult GetTaskById(string id)
         {
-            if (string.IsNullOrWhiteSpace(taskName))
-                return BadRequest("Task name is required.");
-
-            var taskQuery = tasks.Where(t => t.Name.Equals(taskName, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrEmpty(userId))
-            {
-                taskQuery = taskQuery.Where(t => t.UserId == userId);
-            }
-
-            var task = taskQuery.FirstOrDefault();
-
+            LoadTasksFromFile();
+            var task = tasks.FirstOrDefault(t => t.Id == id);
             if (task == null)
-                return NotFound($"Task '{taskName}'{(userId != null ? $" for user '{userId}'" : "")} not found.");
-
+                return NotFound($"Task with ID {id} not found.");
             return Ok(task);
         }
 
-        // ✅ UPDATE: Update task by name (and userId)
-        [HttpPut("by-name")]
-        public IActionResult UpdateTaskByName([FromQuery] string taskName, [FromQuery] string userId, [FromBody] Task updatedTask)
+        [HttpPut("{username}/{taskName}")]
+        public IActionResult UpdateTask(string username, string taskName, [FromBody] Task updatedTask)
         {
-            if (string.IsNullOrWhiteSpace(taskName) || string.IsNullOrWhiteSpace(userId))
-                return BadRequest("Task name and userId are required.");
+            LoadTasksFromFile();
+            var taskToUpdate = tasks.FirstOrDefault(t => t.UserId == username && t.Name == taskName);
+            if (taskToUpdate == null)
+                return NotFound($"Task '{taskName}' untuk user '{username}' tidak ditemukan.");
 
-            var task = tasks.FirstOrDefault(t =>
-                t.Name.Equals(taskName, StringComparison.OrdinalIgnoreCase) && t.UserId == userId);
+            taskToUpdate.Name = updatedTask.Name;
+            taskToUpdate.Description = updatedTask.Description;
+            taskToUpdate.Deadline = updatedTask.Deadline;
+            taskToUpdate.Status = updatedTask.Status;
 
-            if (task == null)
-                return NotFound($"Task '{taskName}' for user '{userId}' not found.");
-
-            task.Name = updatedTask.Name;
-            task.Description = updatedTask.Description;
-            task.Deadline = updatedTask.Deadline;
-            task.Status = updatedTask.Status;
-
+            SaveTasksToFile();
             return NoContent();
         }
 
-        // ✅ DELETE: Delete task by name and userId
-        [HttpDelete("by-name")]
-        public IActionResult DeleteTaskByName([FromQuery] string taskName, [FromQuery] string userId)
+        [HttpDelete("{username}")]
+        public IActionResult DeleteTask(string username, [FromQuery] string taskName)
         {
-            if (string.IsNullOrWhiteSpace(taskName) || string.IsNullOrWhiteSpace(userId))
-                return BadRequest("Task name and userId are required.");
+            LoadTasksFromFile();
+            var taskToDelete = tasks.FirstOrDefault(t => t.UserId == username && t.Name == taskName);
+            if (taskToDelete == null)
+                return NotFound($"Task '{taskName}' untuk user '{username}' tidak ditemukan.");
 
-            var task = tasks.FirstOrDefault(t =>
-                t.Name.Equals(taskName, StringComparison.OrdinalIgnoreCase) && t.UserId == userId);
-
-            if (task == null)
-                return NotFound($"Task '{taskName}' for user '{userId}' not found.");
-
-            tasks.Remove(task);
+            tasks.Remove(taskToDelete);
+            SaveTasksToFile();
             return NoContent();
         }
-    }
-}
+
+        [HttpGet("ongoing/{username}")]
+        public IActionResult GetOngoingTasks(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return BadRequest("Username is required.");
+
+            LoadTasksFromFile();
+            var ongoingTasks = tasks.Where(t

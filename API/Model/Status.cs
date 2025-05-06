@@ -1,9 +1,6 @@
-﻿namespace API.Model
+﻿public enum Status
 {
-    public enum Status
-    {
-        Overdue,
-        Completed,
-        Incompleted
-    }
+    Incompleted = 1,
+    Completed = 2,
+    Overdue = 3
 }

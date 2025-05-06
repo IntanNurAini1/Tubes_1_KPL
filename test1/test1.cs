@@ -14,8 +14,8 @@ namespace test1
         {
             var mockController = new MockLoginRegisterController();
             mockController.AddUser("user", "user123");
-            var automata = new LoginRegisterAutomata(mockController);
 
+            var automata = new LoginRegisterAutomata(mockController);
             await automata.Login("user", "user123");
 
             Assert.AreEqual(LoginRegisterAutomata.State.LoggedIn, automata.CurrentState);
@@ -26,13 +26,12 @@ namespace test1
         {
             var mockController = new MockLoginRegisterController();
             mockController.AddUser("user", "user123");
-            var automata = new LoginRegisterAutomata(mockController);
 
+            var automata = new LoginRegisterAutomata(mockController);
             await automata.Login("user", "wrongpassword");
 
             Assert.AreEqual(LoginRegisterAutomata.State.LoggedOut, automata.CurrentState);
         }
-
 
         private class MockLoginRegisterController : LoginRegisterController
         {
